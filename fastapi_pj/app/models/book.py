@@ -1,19 +1,11 @@
-from odmantic import AIOEngine, Model
+from odmantic import Model
 
 
 class BookModel(Model):
     keyword: str
-    game: str
+    publisher: str
+    price: int
+    image: str
 
-
-engine = AIOEngine()
-
-leeroy = Player(name="Leeroy Jenkins", game="World of Warcraft")
-await engine.save(leeroy)
-
-players = [
-    Player(name="Shroud", game="Counter-Strike"),
-    Player(name="Serral", game="Starcraft"),
-    Player(name="TLO", game="Starcraft"),
-]
-await engine.save_all(players)
+    class Config:
+        collection = "books"
