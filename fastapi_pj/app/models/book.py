@@ -8,4 +8,4 @@ class BookModel(Model):
     image: str
 
     class Config:
-        collection = "books"
+        collection = "test"
