@@ -1,10 +1,15 @@
 import aiohttp
 import asyncio
+from app.config import get_secret
 
-from app.config import NAVER_API_SECRET, get_secret
+# from config import get_secret
 
 
 class NaverBookScraper:
+
+    """
+    네이버 오픈 API를 이용한 데이터 수집
+    """
 
     NAVER_API_BOOK = "https://openapi.naver.com/v1/search/book"
     NAVER_API_ID = get_secret("NAVER_API_ID")
@@ -17,17 +22,17 @@ class NaverBookScraper:
                 result = await response.json()
                 return result["items"]
 
-    def unit_url(self, keyword, start):
+    def unit_api(self, keyword, start):
         return {
             "url": f"{self.NAVER_API_BOOK}?query={keyword}&display=10&start={start}",
             "headers": {
-                "X-NAVER-Client-ID": self.NAVER_API_ID,
-                "X-NAVER-Client-SECRET": self.NAVER_API_SECRET,
+                "X-Naver-Client-Id": self.NAVER_API_ID,
+                "X-Naver-Client-Secret": self.NAVER_API_SECRET,
             },
         }
 
     async def search(self, keyword, total_page):
-        apis = [self.unit_url(keyword, 1 + i * 10) for i in range(total_page)]
+        apis = [self.unit_api(keyword, 1 + i * 10) for i in range(total_page)]
         async with aiohttp.ClientSession() as session:
             all_data = await asyncio.gather(
                 *[
@@ -35,24 +40,18 @@ class NaverBookScraper:
                     for api in apis
                 ]
             )
+            result = []
+            for data in all_data:
+                if data is not None:
+                    for book in data:
+                        result.append(book)
 
-        print(all_data)
-        result = []
-        for data in all_data:
-            if data is not None:
-                for book in data:
-                    result.append(book)
-
-        return result
+            return result
 
     def run(self, keyword, total_page):
         return asyncio.run(self.search(keyword, total_page))
 
 
 if __name__ == "__main__":
-
-    # asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-    # asyncio.run(main())
-
     scraper = NaverBookScraper()
-    print(scraper.run("파이썬", 2))
+    results = scraper.run("파이썬", 10)

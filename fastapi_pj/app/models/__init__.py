@@ -1,20 +1,45 @@
 from motor.motor_asyncio import AsyncIOMotorClient
 from odmantic import AIOEngine
-from app.config import MONGO_DB_NAME, MONGO_URL
+from app.config import get_secret
 
 
-class MongoDB:
-    def __init__(self):
-        self.client = None
-        self.engine = None
+class __MongoDB:
 
-    def connect(self):
-        self.client = AsyncIOMotorClient(MONGO_URL)
-        self.engine = AIOEngine(motor_client=self.client, database=MONGO_DB_NAME)
-        print("DB와 성공적으로 연결되었습니다")
+    MONGO_URL = get_secret("MONGO_URL")
+    MONGO_DB_NAME = get_secret("MONGO_DB_NAME")
+    MONGO_MAX_CONNECTIONS = get_secret("MONGO_MAX_CONNECTIONS", "10")
+    MONGO_MIN_CONNECTIONS = get_secret("MONGO_MIN_CONNECTIONS", "10")
 
-    def close(self):
-        self.client.close()
+    def __init__(self) -> None:
+        self.__client: AsyncIOMotorClient = None
+        self.__engine: AIOEngine = None
+
+    @property
+    def client(self) -> AsyncIOMotorClient:
+        return self.__client
+
+    @property
+    def engine(self) -> AIOEngine:
+        return self.__engine
+
+    async def connect(self):
+        """
+        Connect to MongoDB
+        """
+        self.__client = AsyncIOMotorClient(
+            self.MONGO_URL,
+            maxPoolSize=self.MONGO_MAX_CONNECTIONS,
+            minPoolSize=self.MONGO_MIN_CONNECTIONS,
+        )
+        self.__engine: AIOEngine = AIOEngine(
+            motor_client=self.__client, database=self.MONGO_DB_NAME
+        )
+
+    async def close(self):
+        """
+        Close MongoDB Connection
+        """
+        self.__client.close()
 
 
-mongodb = MongoDB()
+mongodb = __MongoDB()
