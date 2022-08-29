@@ -8,4 +8,4 @@ class BookModel(Model):
     price: int
 
     class Config:
-        collection = "books"
+        collection = "test"
